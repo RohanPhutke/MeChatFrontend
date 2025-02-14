@@ -1,10 +1,16 @@
 # MeChat – Your Personal Real-Time Chat Companion
-### MeChat is a lightweight, real-time chat application designed for instant messaging between users and the server. Powered by Strapi on the backend and Next.js on the frontend, MeChat leverages WebSockets to ensure seamless, instant message delivery.
+MeChat is a lightweight, real-time chat application designed for instant messaging between users and the server. 
+Powered by Strapi on the backend and Next.js on the frontend, 
+MeChat leverages WebSockets to ensure seamless, instant message delivery.
 
 🔹 Instant Communication – Messages are echoed back in real-time, simulating a dynamic chat experience.
+
 🔹 Secure Authentication – Users can sign up, log in, and manage chat sessions effortlessly.
+
 🔹 Local Storage – Chat history is saved for a smooth, persistent experience.
+
 🔹 Responsive & Intuitive UI – Designed for all screen sizes, from mobile to desktop.
+
 🔹 Session Management – Easily switch between different chat sessions.
 
 Built for speed and simplicity, MeChat is a perfect showcase of real-time communication in action! 🚀
