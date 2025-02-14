@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if(token === null) setIsLoading(false);
     
     if (token && tokenExpiry && Date.now() < parseInt(tokenExpiry)) {
-      console.log("TOken exist and within expiry");
+      console.log("TOken exists and within expiry");
       fetchUser(token).finally(() => setIsLoading(false));
     } else if(token && tokenExpiry && Date.now() > parseInt(tokenExpiry) ) {
       logout(); 
