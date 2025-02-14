@@ -14,6 +14,8 @@ MeChat leverages WebSockets to ensure seamless, instant message delivery.
 🔹 Session Management – Easily switch between different chat sessions.
 
 Built for speed and simplicity, MeChat is a perfect showcase of real-time communication in action! 🚀
+
+
 <----------------------------------Next.js Documentation below!!------------------------------->
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
