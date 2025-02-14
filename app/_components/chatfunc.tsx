@@ -10,7 +10,7 @@ import { InputArea } from "./input-area";
 import { saveToLocalStorage, loadFromLocalStorage } from "@/utils/localStorageUtils";
 
 export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: string; userName: string, onLogout: () => void }) {
-  const [jwt, setJwt] = useState<string | null>(localStorage.getItem("jwt"));
+  const [jwt] = useState<string | null>(localStorage.getItem("jwt"));
   const [chatSessions, setChatSessions] = useState<{ [key: string]: any[] }>({});
   const [input, setInput] = useState("");
   const [sessions, setSessions] = useState<string[]>([]);
