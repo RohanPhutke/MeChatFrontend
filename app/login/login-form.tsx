@@ -60,12 +60,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, loading, error }
       </form>
 
       <div className="mt-4 text-center">
-        <p className="text-sm text-white">
-          Don't have an account?{" "}
-          <a href="/signup" className="text-blue-400 hover:underline">
-            Sign Up
-          </a>
-        </p>
+      <p className="text-sm text-white">
+        Don&apos;t have an account?{" "}
+        <a href="/signup" className="text-blue-400 hover:underline">
+        Sign Up
+      </a>
+</p>
       </div>
     </div>
   );

@@ -37,8 +37,12 @@ export default function SignupPage() {
       localStorage.setItem("jwt", data.jwt);
       login(email, password);
       router.push("/");
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An error occurred");
+      }
       setLoading(false);
     }
   };

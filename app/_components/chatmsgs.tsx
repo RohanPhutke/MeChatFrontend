@@ -1,8 +1,13 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+interface ChatMessage {
+  sender: "user" | "bot";
+  text: string;
+}
+
 interface ChatMessagesProps {
-  chatSessions: { [key: string]: any[] };
+  chatSessions: { [key: string]: ChatMessage[] };
   currentSession: string;
 }
 
