@@ -3,6 +3,7 @@ import React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Menu, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { io, Socket } from "socket.io-client";
 import WelcomeMessage from "./welcome-msg";
 import { Sidebar } from "./sidebar";
 import { ChatMessages } from "./chatmsgs";
@@ -13,9 +14,6 @@ type Message = {
   text: string;
   sender: "user" | "bot";
 };
-
-
-
 
 export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: string; userName: string, onLogout: () => void }) {
   const [jwt] = useState<string | null>(localStorage.getItem("jwt"));
@@ -28,7 +26,7 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
   const [editValue, setEditValue] = useState("");
 
   const chatBoxRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   const CHAT_SESSIONS_KEY = `myApp_chatSessions_${userEmail}`;
   const SESSIONS_KEY = `myApp_sessions_${userEmail}`;
@@ -36,7 +34,6 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
   useEffect(() => {
     const savedSessions: Record<string, Message[]> = loadFromLocalStorage(CHAT_SESSIONS_KEY, {});
     const savedSessionList: string[] = loadFromLocalStorage(SESSIONS_KEY, []);
-
 
     if (Object.keys(savedSessions).length > 0 && savedSessionList.length > 0) {
       setSessions(savedSessionList);
@@ -51,56 +48,68 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
       saveToLocalStorage(CHAT_SESSIONS_KEY, { [initialSession]: [] });
       saveToLocalStorage(SESSIONS_KEY, [initialSession]);
     }
-  }, [userEmail,CHAT_SESSIONS_KEY, SESSIONS_KEY]);
+  }, [userEmail, CHAT_SESSIONS_KEY, SESSIONS_KEY]);
 
   useEffect(() => {
     if (Object.keys(chatSessions).length > 0 && sessions.length > 0) {
       saveToLocalStorage(CHAT_SESSIONS_KEY, chatSessions);
       saveToLocalStorage(SESSIONS_KEY, sessions);
     }
-  }, [chatSessions, sessions, userEmail,CHAT_SESSIONS_KEY, SESSIONS_KEY]);
+  }, [chatSessions, sessions, userEmail, CHAT_SESSIONS_KEY, SESSIONS_KEY]);
 
   useEffect(() => {
-    if (currentSession) {
+    if (currentSession && jwt) {
+
       if (socketRef.current) {
-        socketRef.current.close();
+        socketRef.current.disconnect();
       }
+  
+      socketRef.current = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:8084", {
+        auth: { token: jwt },
+        query: { session: currentSession },
+      });
+  
 
-      socketRef.current = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSOCKET_URL}?token=${jwt}&session=${currentSession}`);
-      socketRef.current.onopen = () => {
-        console.log(`Connected to WebSocket for session: ${currentSession}`);
-      };
+      socketRef.current.emit("authenticate", jwt);
 
-      socketRef.current.onmessage = (event: MessageEvent) => {
+      socketRef.current.on("authenticated", () => {
+        console.log("Authenticated with server");
+      });
+  
+      socketRef.current.on("message", (data: string) => {
         try {
-          const jsonString = event.data.replace(/^Echo:\s*/, "");
-          const newMessage = JSON.parse(jsonString);
-          newMessage.sender = 'bot';
-
+          const parsedData = JSON.parse(data); 
+          console.log("📩 Parsed Message received:", parsedData);
+      
           setChatSessions((prev) => {
             const currentChat = prev[currentSession] || [];
-            const updatedMessages = [
+            const updatedMessages: Message[] = [
               ...currentChat,
-              { text: newMessage.text, sender: newMessage.sender },
+              { text: parsedData.text, sender: "bot" as const },
             ];
             return { ...prev, [currentSession]: updatedMessages };
           });
         } catch (error) {
-          console.error("Error parsing WebSocket message:", error);
+          console.error("❌ Error parsing WebSocket message:", error);
         }
-      };
+      });
+      
+      socketRef.current.on("unauthorized", (error: { error: string }) => {
+        console.error("❌ Unauthorized:", error.error);
+        socketRef.current?.disconnect();
+      });
 
-      socketRef.current.onerror = (error: Event) => {
-        console.error("WebSocket Error:", error);
-      };
-
+      socketRef.current.on("disconnect", () => {
+        console.log("❌ Disconnected from server");
+      });
+  
       return () => {
         if (socketRef.current) {
-          socketRef.current.close();
+          socketRef.current.disconnect();
         }
       };
     }
-  }, [currentSession, userEmail,jwt]);
+  }, [currentSession, jwt]);
 
   useEffect(() => {
     if (chatBoxRef.current) {
@@ -115,24 +124,23 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
       const currentChat = prev[currentSession] || [];
       const updatedMessages: Message[] = [
         ...currentChat,
-        { text: input, sender: "user" }, 
+        { text: input, sender: "user" },
       ];
       return { ...prev, [currentSession]: updatedMessages };
     });
   
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+    if (socketRef.current) {
       const messageData = {
         text: input,
-        sender: "user",
+        sender: "user" as const,
         session: currentSession,
         userEmail: userEmail,
       };
-      socketRef.current.send(JSON.stringify(messageData));
+      socketRef.current.emit("message", JSON.stringify(messageData));
     }
   
     setInput("");
   };
-  
 
   const addNewSession = () => {
     const sessionNumber = sessions.length + 1;
