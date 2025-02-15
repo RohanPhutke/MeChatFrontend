@@ -9,6 +9,14 @@ import { ChatMessages } from "./chatmsgs";
 import { InputArea } from "./input-area";
 import { saveToLocalStorage, loadFromLocalStorage } from "@/utils/localStorageUtils";
 
+type Message = {
+  text: string;
+  sender: "user" | "bot";
+};
+
+
+
+
 export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: string; userName: string, onLogout: () => void }) {
   const [jwt] = useState<string | null>(localStorage.getItem("jwt"));
   const [chatSessions, setChatSessions] = useState<{ [key: string]: any[] }>({});
@@ -42,7 +50,7 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
       saveToLocalStorage(CHAT_SESSIONS_KEY, { [initialSession]: [] });
       saveToLocalStorage(SESSIONS_KEY, [initialSession]);
     }
-  }, [userEmail]);
+  }, [userEmail,CHAT_SESSIONS_KEY, SESSIONS_KEY]);
 
   useEffect(() => {
     if (Object.keys(chatSessions).length > 0 && sessions.length > 0) {
@@ -91,7 +99,7 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
         }
       };
     }
-  }, [currentSession, userEmail]);
+  }, [currentSession, userEmail,jwt]);
 
   useEffect(() => {
     if (chatBoxRef.current) {
