@@ -19,7 +19,7 @@ type Message = {
 
 export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: string; userName: string, onLogout: () => void }) {
   const [jwt] = useState<string | null>(localStorage.getItem("jwt"));
-  const [chatSessions, setChatSessions] = useState<{ [key: string]: any[] }>({});
+  const [chatSessions, setChatSessions] = useState<Record<string, Message[]>>({});
   const [input, setInput] = useState("");
   const [sessions, setSessions] = useState<string[]>([]);
   const [currentSession, setCurrentSession] = useState("");
@@ -34,8 +34,9 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
   const SESSIONS_KEY = `myApp_sessions_${userEmail}`;
 
   useEffect(() => {
-    const savedSessions = loadFromLocalStorage(CHAT_SESSIONS_KEY, {});
-    const savedSessionList = loadFromLocalStorage(SESSIONS_KEY, []);
+    const savedSessions: Record<string, Message[]> = loadFromLocalStorage(CHAT_SESSIONS_KEY, {});
+    const savedSessionList: string[] = loadFromLocalStorage(SESSIONS_KEY, []);
+
 
     if (Object.keys(savedSessions).length > 0 && savedSessionList.length > 0) {
       setSessions(savedSessionList);
@@ -57,7 +58,7 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
       saveToLocalStorage(CHAT_SESSIONS_KEY, chatSessions);
       saveToLocalStorage(SESSIONS_KEY, sessions);
     }
-  }, [chatSessions, sessions, userEmail]);
+  }, [chatSessions, sessions, userEmail,CHAT_SESSIONS_KEY, SESSIONS_KEY]);
 
   useEffect(() => {
     if (currentSession) {
@@ -109,16 +110,16 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
 
   const sendMessage = () => {
     if (input.trim() === "") return;
-
+  
     setChatSessions((prev) => {
       const currentChat = prev[currentSession] || [];
-      const updatedMessages = [
+      const updatedMessages: Message[] = [
         ...currentChat,
-        { text: input, sender: "user" },
+        { text: input, sender: "user" }, 
       ];
       return { ...prev, [currentSession]: updatedMessages };
     });
-
+  
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       const messageData = {
         text: input,
@@ -128,9 +129,10 @@ export default function ChatApp({ userEmail, userName, onLogout }: { userEmail: 
       };
       socketRef.current.send(JSON.stringify(messageData));
     }
-
+  
     setInput("");
   };
+  
 
   const addNewSession = () => {
     const sessionNumber = sessions.length + 1;
